@@ -1,16 +1,19 @@
 import { useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
-import { type Issue } from "./issue";
-import { DragDropContext } from "react-beautiful-dnd";
-import Column from "./components/Column";
+import Board from "./components/Board";
+import { type IssueType } from "./types/";
+import { setIssues } from "./redux/slices/issuesSlice";
+import { useAppDispatch, useAppSelector } from "./redux/hooks";
+import { issueDto } from "./helpers";
+import cl from "./App.module.css";
 
 function App() {
+  const dispatch = useAppDispatch();
+  const reduxIssues = useAppSelector((state) => state.issues);
   const [validated, setValidated] = useState(false);
   const [error, setError] = useState("");
-  const [todo, setTodo] = useState<Issue[]>([]);
-  const [inProgress, setInProgress] = useState<Issue[]>([]);
-  const [done, setDone] = useState<Issue[]>([]);
+  const [repoName, setRepoName] = useState("");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -21,8 +24,6 @@ function App() {
       return;
     }
     const url = form.repositoryUrl.value;
-    console.log(url);
-
     const regex = /github\.com\/([^/]+)\/([^/]+)/;
     const match = url.match(regex);
 
@@ -31,20 +32,47 @@ function App() {
       const repoName = match[2];
       const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/issues?per_page=50&page=1&state=all`;
 
+      // Check if issues is already in redux
+      if (reduxIssues[`${owner}/${repoName}`]) {
+        setRepoName(`${owner}/${repoName}`);
+        form.repositoryUrl.value = "";
+        setValidated(false);
+        return reduxIssues[`${owner}/${repoName}`];
+      }
+
       try {
         const response = await fetch(apiUrl);
         if (response.ok) {
-          const data = (await response.json()) as Issue[];
-          console.log(data.length);
-          setTodo(
-            data.filter((issue) => issue.state === "open" && !issue.assignee)
+          const data = ((await response.json()) as IssueType[]).map((issue) => {
+            return issueDto(issue);
+          });
+
+          const todoColumn = data.filter(
+            (issue) => issue.state === "open" && !issue.assignee
           );
-          console.log(data.length);
-          setInProgress(
-            data.filter((issue) => issue.state === "open" && issue.assignee)
+          const inProgressColumn = data
+            .filter((issue) => issue.state === "open" && issue.assignee)
+            .map((issue) => {
+              return {
+                ...issue,
+                state: "in progress" as "open" | "closed" | "in progress",
+              };
+            });
+          const doneColumn = data.filter((issue) => issue.state !== "open");
+
+          setRepoName(`${owner}/${repoName}`);
+          dispatch(
+            setIssues({
+              repoName: `${owner}/${repoName}`,
+              issues: {
+                todo: todoColumn,
+                inProgress: inProgressColumn,
+                done: doneColumn,
+              },
+            })
           );
-          setDone(data.filter((issue) => issue.state !== "open"));
-          console.log(data);
+          form.repositoryUrl.value = "";
+          setValidated(false);
         } else {
           setError(`Failed to fetch issues: ${response.statusText}`);
         }
@@ -55,12 +83,12 @@ function App() {
       setError("Invalid repository URL");
     }
   };
+
   return (
     <>
       <header className="bg-light rounded-3 w-50 m-auto mt-5 p-4 container center ">
         <h1 className="header">Welcome To Github Issues Board</h1>
         <p>Enter a repository url to start</p>
-
         <Form onSubmit={handleSubmit} noValidate validated={validated}>
           <Form.Group>
             <Form.Control
@@ -87,20 +115,29 @@ function App() {
         </Form>
         {error && <p className="mt-2 mb-0 text-danger text-center">{error}</p>}
       </header>
-      <main>
-        {/* <DragDropContext>
 
-        </DragDropContext> */}
-        <DragDropContext onDragEnd={() => {}}>
-          <div
-            className="d-inline-flex justify-content-around align-items-start w-100 mt-5"
-            
-          >
-            <Column title="TODO" issues={todo} id="todo" />
-            <Column title="IN PROGRESS" issues={inProgress} id="inProgress" />
-            <Column title="DONE" issues={done} id="done" />
+      <main>
+        {repoName && (
+          <div className="d-flex justify-content-center mt-4 mb-0 display-5">
+            <a
+              href={`https://github.com/${repoName.split("/")[0]}`}
+              className={cl.repoName}
+              target="_blank"
+            >
+              {repoName.split("/")[0].toUpperCase()}
+            </a>
+            <span> {" > "} </span>
+            <a
+              href={`https://github.com/${repoName}`}
+              className={cl.repoName}
+              target="_blank"
+            >
+              {repoName.split("/")[1].toUpperCase()}
+            </a>
           </div>
-        </DragDropContext>
+        )}
+
+        <Board repoName={repoName} />
       </main>
     </>
   );

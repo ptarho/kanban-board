@@ -1,12 +1,14 @@
-export type Issue = {
+export type IssueType = {
   id: number;
   url: string;
-  state: "open" | "close";
+  htmlUrl: string;
+  state: "open" | "closed" | "in progress";
   title: string;
   body: string;
+  comments: number;
+  createdAt: string;
   user?: {
-    title: string;
-    name: string;
+    login: string;
     avatar_url: string;
     url: string;
   };
