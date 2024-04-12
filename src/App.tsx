@@ -23,7 +23,10 @@ function App() {
       event.stopPropagation();
       return;
     }
-    const url = form.repositoryUrl.value;
+    const repositoryUrlInput = form.elements.namedItem(
+      "repositoryUrl"
+    ) as HTMLInputElement; // in order to let test find this input
+    const url = repositoryUrlInput.value;
     const regex = /github\.com\/([^/]+)\/([^/]+)/;
     const match = url.match(regex);
 
@@ -86,7 +89,7 @@ function App() {
 
   return (
     <>
-      <header className="bg-light rounded-3 w-50 m-auto mt-5 p-4 container center ">
+      <header className="bg-light rounded-3 w-50 m-auto mt-4 p-4 container center ">
         <h1 className="header">Welcome To Github Issues Board</h1>
         <p>Enter a repository url to start</p>
         <Form onSubmit={handleSubmit} noValidate validated={validated}>

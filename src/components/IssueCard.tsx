@@ -32,27 +32,29 @@ const IssueCard: React.FC<Props> = ({ issue, index, column }) => {
               />
               <p className="m-1">
                 <a href={issue.user.url}>{issue.user.login}</a>
-                <p className="m-0">Comments: {issue.comments}</p>
+                <span className="m-0 d-block">Comments: {issue.comments}</span>
               </p>
-              <div className="ms-auto">
-                <p className="mb-0">Created:</p>
-                <p className="mb-0">{daysAgoFromDate(issue.createdAt)}</p>
+              <div className="ms-auto me-1">
+                <p className="mb-0">Status:</p>
+                <p
+                  className={cl(
+                    column === "todo" && "bg-success",
+                    column === "in progress" && "bg-warning",
+                    column === "done" && "bg-danger",
+                    "text-white rounded-3 p-1 pt-0 mb-0"
+                  )}
+                >
+                  {issue.state}
+                </p>
               </div>
             </div>
           )}
 
           <p className="m-1 d-flex">
-            Status:{" "}
-            <span
-              className={cl(
-                column === "todo" && "bg-success",
-                column === "in progress" && "bg-warning",
-                column === "done" && "bg-danger",
-                "text-white rounded-3 p-1 pt-0 ms-1"
-              )}
-            >
-              {issue.state}
+            <span className="mb-0">
+              Created: {daysAgoFromDate(issue.createdAt)}
             </span>
+
             <span className="ms-auto d-inline-block">
               <a href={issue.htmlUrl} target="_blank">
                 #{issue.id}
