@@ -9,4 +9,5 @@ export default defineConfig({
     globals: true,
     setupFiles: "./tests/setup.ts",
   },
+  base: "/kanban-board/"
 });

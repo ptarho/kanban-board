@@ -3,12 +3,11 @@
   "private": false,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://ptarho.github.io/kanban-board/",
+  "homepage": "https://ptarho.github.io/",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
     "test": "vitest",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
